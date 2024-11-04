@@ -1,0 +1,75 @@
+import javax.swing.JOptionPane;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Properties;
+import javax.mail.*;
+import javax.mail.internet.*;
+
+public class ChamadosHardware {
+
+    public static void main(String[] args) {
+        int numeroChamados = 10;
+
+        for (int i = 1; i <= numeroChamados; i++) {
+            if (i < numeroChamados) {
+                System.out.println("Chamado " + i + ": Analisando problemas de hardware de memória.");
+            } else {
+                mostrarNotificacao("Abertura Ultrapassada", "Alerta: Foi atingido o limite de 10 chamados de hardware!");
+                enviarEmail();
+            }
+        }
+    }
+
+    private static void mostrarNotificacao(String titulo, String mensagem) {
+        if (!SystemTray.isSupported()) {
+            System.out.println("Sistema de bandeja não suportado.");
+            return;
+        }
+
+        Image imagem = Toolkit.getDefaultToolkit().getImage("path/to/alerta.png");
+        TrayIcon trayIcon = new TrayIcon(imagem, "Alerta");
+        trayIcon.setImageAutoSize(true);
+        SystemTray tray = SystemTray.getSystemTray();
+
+        try {
+            tray.add(trayIcon);
+            trayIcon.displayMessage(titulo, mensagem, TrayIcon.MessageType.WARNING);
+            Thread.sleep(3000);
+            tray.remove(trayIcon);
+        } catch (AWTException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void enviarEmail() {
+        String para = "igor.oliveirsreis@gmail.com";
+        String de = "seu_email@gmail.com";
+        String assunto = "Alerta de Chamados de Hardware";
+        String mensagem = "Foi atingido o limite de 10 chamados de hardware.";
+
+        Properties propriedades = new Properties();
+        propriedades.put("mail.smtp.auth", "true");
+        propriedades.put("mail.smtp.starttls.enable", "true");
+        propriedades.put("mail.smtp.host", "smtp.gmail.com");
+        propriedades.put("mail.smtp.port", "587");
+
+        Session sessao = Session.getInstance(propriedades, new javax.mail.Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(de, "sua_senha");
+            }
+        });
+
+        try {
+            Message mensagemEmail = new MimeMessage(sessao);
+            mensagemEmail.setFrom(new InternetAddress(de));
+            mensagemEmail.setRecipients(Message.RecipientType.TO, InternetAddress.parse(para));
+            mensagemEmail.setSubject(assunto);
+            mensagemEmail.setText(mensagem);
+
+            Transport.send(mensagemEmail);
+            System.out.println("E-mail enviado com sucesso!");
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+}
